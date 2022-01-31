@@ -1,0 +1,229 @@
+---
+title: "Examen_IreneEzeizaPampliega"
+author: "Irene Ezeiza"
+date: "1/31/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. (2 puntos) Comandos de Linux. Tengo un fichero llamado genes.txt con 3 columnas: Nombre_ de_ gen, cromosoma y posición. Separados por tabulados. ¿Qué comando utilizarías para saber?:
+
+### a. ¿Cuántas palabras hay en el fichero?
+cat genes.txt | wc -l
+
+### b. ¿Cómo cambiarías todos los tabulados por guiones?
+cat gene.txt | sed s'/g/G/g'
+
+### c. ¿Cómo cambiarías solo la primera aparición?
+cat gene.txt | sed s'/g/G/'
+
+### d. ¿Cómo buscarías todos los genes excepto el gen llamado DSTYK?
+cat gene.txt | grep DSTYK
+
+## Con el dataset llamado weather responde a las siguientes preguntas:
+```{r}
+library(nycflights13)
+library(tidyverse)
+weather <- nycflights13::weather
+library(ggplot2)
+```
+
+## 2. Preguntas básicas:
+### a. (0.5 puntos) ¿Cuántas columnas y cuántos registros tiene este dataset?
+
+```{r}
+ncol(weather)
+```
+
+El numero de columnas es 15
+
+```{r}
+nrow(weather)
+```
+
+El numero de filas es 26115
+
+### b. (0.5 puntos) ¿Cuántos “origin” diferentes existen y para cada uno de ellos cuántos registros hay?
+
+```{r}
+table(weather$origin)
+```
+
+Existen 3 origin diferentes, para EWR hay 8703 registros, para JFK hay 8706 y para LGA hay 8706.
+
+### c. (0.5 puntos) En LGA, ¿cuáles fueron la mediana del wind_speed y media de pressure? 
+
+```{r}
+LGA <- filter(weather, origin=="LGA")
+median(LGA$wind_speed)
+```
+
+La mediana del wind_speed en el origin LGA fue de 10.35702.
+
+```{r}
+LGA <- filter(weather, origin=="LGA")
+LGA_pressure_sinNA <- LGA$pressure[complete.cases(LGA$pressure)]
+mean(LGA_pressure_sinNA)
+```
+
+La media de pressure en el origin LGA fue de 1017.678.
+
+### d. (0.5 puntos) Después de eliminar los NA de la columna wind_gust, calcula para cada mes la media de wind_speed y wind_gust, y el número de casos.
+
+```{r}
+weather_sinNA <- weather[complete.cases(weather),]
+
+media_wind_speed <- aggregate(weather_sinNA$wind_speed, list(weather_sinNA$month), mean)
+
+media_wind_speed
+
+```
+
+La tabla media_wind_speed, muestra el valor medio de wind_speed, en cada mes
+
+```{r}
+media_wind_gust <- aggregate(weather_sinNA$wind_gust, list(weather_sinNA$month), mean)
+
+media_wind_gust
+
+```
+
+La tabla media_wind_gust, muestra el valor medio de wind_gust, en cada mes.
+
+```{r}
+numero_casos <- nrow(weather_sinNA) 
+print(numero_casos)
+```
+
+El numero de casos es 4980.
+
+## 3. (2 puntos) Intenta hacer este plot
+### Crea el plot anterior
+```{r}
+LGA <- filter(weather, origin=="LGA")
+JFK <- filter(weather, origin=="JFK")
+EWR <- filter(weather, origin=="EWR")
+function(x)
+{
+
+boxplot(JFK$temp ~ JFK$month,
+     type = "l",
+     col = "green",
+     main = "JFK",
+     xlab = "Months",
+     ylab = "Cº",
+     pch = 8)
+
+boxplot(EWR$temp ~ EWR$month,
+     type = "l",
+     col = "pink2",
+     main = "EWR",
+     xlab = "Months",
+     ylab = "Cº",
+     pch = 8)
+
+boxplot(LGA$temp ~ LGA$month,
+     type = "l",
+     col = "blue",
+     main = "LGA",
+     xlab = "Months",
+     ylab = "Cº",
+     pch = 8)
+}
+
+```
+
+### Crea una función que plotee el plot anterior.
+#### Como argumentos se podrán introducir: el nombre de la columna de interés, el título y las unidades
+#### La función debe devolver un vector con 3 valores. Estos valores serán la media de cada uno de los lugares
+#### Por pantalla también tendrá que aparecer la media mediante un print.
+
+```{r}
+
+plot_meteo <- function(data,col,titulo,unidades)
+{
+  dat <- data.frame(data)
+  x <-dat[,col] 
+  boxplot(x ~ dat$month, type ="l", ylab = unit, xlab= "Months",col="blue", main = titulo)
+  media <- c(mean(EWR$temp,na.rm=T),mean(LGA$temp,na.rm=T),mean(JFK$temp,na.rm=T))
+
+  return(media)
+  print(media)  
+}
+# 
+# plot_meteo(EWR,"humid","Humedad: EWR", "Relative humidity" )
+# plot_meteo(LGA,"humid","Humedad: LGA", "Relative humidity")
+# plot_meteo(JFK,"humid","Humedad: JFK", "Relative humidity")
+# 
+# plot_meteo(weather,"humid","Humedad", "Relative humidity")
+
+```
+
+## 4. (2 puntos) El día de tu cumpleaños:
+### a. Qué correlación tuvieron la temperatura y humedad en cada uno de los origin? Plotealo mediante puntos con ggplot.
+
+```{r}
+cumple_LGA <- LGA[LGA$month == 9 & LGA$day == 18,]
+cor(cumple_LGA$temp, cumple_LGA$humid)
+var <- cor(cumple_LGA$temp, cumple_LGA$humid)
+print(paste0("En mi cumpleaños en el origin LGA la correlacion entre temperatura y humedad fue ", var ))
+
+```
+
+```{r}
+cumpleJFK <- JFK[JFK$month == 9 & JFK$day == 18,]
+cor(cumpleJFK$temp, cumpleJFK$humid)
+print(paste0("En mi cumpleaños en el origin JFK la correlacion entre temperatura y humedad fue ", cor(cumpleJFK$temp, cumpleJFK$humid) ))
+
+```
+
+```{r}
+cumpleEWR <- EWR[EWR$month == 9 & EWR$day == 18,]
+cor(cumpleEWR$temp, cumpleEWR$humid)
+print(paste0("En mi cumpleaños en el origin LGA la correlacion entre temperatura y humedad fue ", cor(cumpleEWR$temp, cumpleEWR$humid) ))
+
+```
+
+```{r}
+
+library(ggplot2)
+ggplot(data = EWR) + 
+  geom_point(mapping = aes(x = humid, y = temp)) + xlab("Humedad") + ylab("Temperatura")
+
+```
+
+```{r}
+ggplot(data = LGA) + 
+  geom_point(mapping = aes(x = humid, y = temp)) + xlab("Humedad") + ylab("Temperatura")
+```
+
+```{r}
+ggplot(data = JFK) + 
+  geom_point(mapping = aes(x = humid, y = temp)) + xlab("Humedad") + ylab("Temperatura")
+
+```
+
+
+### b. Si comparas la temperatura en los origins JFK y LGA ¿son estadísticamente diferentes? ¿Qué p-valor consigues? Plotea los boxplots.
+
+```{r}
+cumple <- weather[weather$month == 9 & weather$day == 18,]
+cumple_originJFKLGA <- filter(cumple, origin=="JFK" | origin == "LGA")
+boxplot(cumple_originJFKLGA$temp ~ cumple_originJFKLGA$origin)
+
+```
+
+```{r}
+t.test(cumple_originJFKLGA$temp ~ cumple_originJFKLGA$origin)
+```
+
+Segun los resultados del t.test, puesto que el pvalor es 0.251, que es <0.05, podemos afirmar que no es diferente la temperatura en los origins JFK y LGA en mi cumple.
+
+## 5. (1 punto) Observa la siguiente imagen.
+### a. ¿Cuál es el punto con FC (Fold change) más grande en valores absolutos?
+El punto morado que está mas a la izquiera, es decir proximo al -10.
+### b. ¿Qué gen sobreexpresado es el más significativo?
+El gen mas significativo es el Csn1s2b, que esta down regulado.
